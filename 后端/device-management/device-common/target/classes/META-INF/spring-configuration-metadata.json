@@ -1,0 +1,129 @@
+{
+  "groups": [
+    {
+      "name": "device.alioss",
+      "type": "com.device.properties.AliOssProperties",
+      "sourceType": "com.device.properties.AliOssProperties"
+    },
+    {
+      "name": "device.baidu",
+      "type": "com.device.properties.BaiduProperties",
+      "sourceType": "com.device.properties.BaiduProperties"
+    },
+    {
+      "name": "device.jwt",
+      "type": "com.device.properties.JwtProperties",
+      "sourceType": "com.device.properties.JwtProperties"
+    },
+    {
+      "name": "device.wechat",
+      "type": "com.device.properties.WeChatProperties",
+      "sourceType": "com.device.properties.WeChatProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "device.alioss.access-key-id",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.AliOssProperties"
+    },
+    {
+      "name": "device.alioss.access-key-secret",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.AliOssProperties"
+    },
+    {
+      "name": "device.alioss.bucket-name",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.AliOssProperties"
+    },
+    {
+      "name": "device.alioss.endpoint",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.AliOssProperties"
+    },
+    {
+      "name": "device.baidu.app-id",
+      "type": "java.lang.String",
+      "description": "百度云信息",
+      "sourceType": "com.device.properties.BaiduProperties"
+    },
+    {
+      "name": "device.baidu.group-id",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.BaiduProperties"
+    },
+    {
+      "name": "device.baidu.key",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.BaiduProperties"
+    },
+    {
+      "name": "device.baidu.secret",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.BaiduProperties"
+    },
+    {
+      "name": "device.jwt.admin-secret-key",
+      "type": "java.lang.String",
+      "description": "管理端员工生成jwt令牌相关配置",
+      "sourceType": "com.device.properties.JwtProperties"
+    },
+    {
+      "name": "device.jwt.admin-token-name",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.JwtProperties"
+    },
+    {
+      "name": "device.jwt.admin-ttl",
+      "type": "java.lang.Long",
+      "sourceType": "com.device.properties.JwtProperties"
+    },
+    {
+      "name": "device.wechat.api-v3-key",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.WeChatProperties"
+    },
+    {
+      "name": "device.wechat.appid",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.WeChatProperties"
+    },
+    {
+      "name": "device.wechat.mch-serial-no",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.WeChatProperties"
+    },
+    {
+      "name": "device.wechat.mchid",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.WeChatProperties"
+    },
+    {
+      "name": "device.wechat.notify-url",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.WeChatProperties"
+    },
+    {
+      "name": "device.wechat.private-key-file-path",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.WeChatProperties"
+    },
+    {
+      "name": "device.wechat.refund-notify-url",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.WeChatProperties"
+    },
+    {
+      "name": "device.wechat.secret",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.WeChatProperties"
+    },
+    {
+      "name": "device.wechat.we-chat-pay-cert-file-path",
+      "type": "java.lang.String",
+      "sourceType": "com.device.properties.WeChatProperties"
+    }
+  ],
+  "hints": []
+}

@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.device.mapper.EquipmentManagerMapper">
+
+    <update id="deviceInbound">
+        update device_management.warehouse_inventory
+        <set>
+            <if test="warehouseId != null">warehouse_id = #{warehouseId},</if>
+            <if test="purchaseId != null">purchase_id = #{purchaseId},</if>
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="equipmentType != null">equipment_type = #{equipmentType},</if>
+            <if test="equipmentName != null and equipmentName != ''">equipment_name = #{equipmentName},</if>
+            <if test="modelNumber != null and modelNumber != ''">model_number = #{modelNumber},</if>
+            <if test="manufacturer != null and manufacturer != ''">manufacturer = #{manufacturer},</if>
+            <if test="batchNumber != null and batchNumber != ''">batch_number = #{batchNumber},</if>
+            <if test="storageLocation != null and storageLocation != ''">storage_location = #{storageLocation},</if>
+            <if test="unit != null and unit != ''">unit = #{unit},</if>
+            <if test="inboundDate != null">inbound_date = #{inboundDate},</if>
+            <if test="inboundBy != null and inboundBy != ''">inbound_by = #{inboundBy},</if>
+            <if test="status != null">status = 2,</if>
+            <if test="areaId != null">area_id = #{areaId},</if>
+            <if test="qualityStatus != null">quality_status = #{qualityStatus},</if>
+            <if test="inspectionDate != null">inspection_date = #{inspectionDate},</if>
+            <if test="inspectionResult != null and inspectionResult != ''">inspection_result = #{inspectionResult},</if>
+            <if test="warrantyPeriod != null">warranty_period = #{warrantyPeriod},</if>
+            <if test="expectedLife != null">expected_life = #{expectedLife},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+            <if test="createBy != null and createBy != ''">create_by = #{createBy},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        WHERE device_id = #{deviceId}
+    </update>
+
+
+    <select id="pageQuery" resultType="com.device.entity.equipment.WarehouseInventory">
+        select * from device_management.warehouse_inventory
+        <where>
+
+            <if test="status != null">
+                and status = #{status}
+            </if>
+
+            <if test="equipmentType != null" >
+                and equipment_type like
+                concat('%',#{equipmentType},'%')
+            </if>
+
+            <if test="equipmentName != null">
+                and equipment_name like
+                concat('%',#{equipmentName},'%')
+            </if>
+
+            <if test="beginTime != null">
+                and inbound_date &gt;= #{beginTime}
+            </if>
+            <if test="endTime != null">
+                and inbound_date &lt;= #{endTime}
+            </if>
+
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="getDeviceByID" resultType="com.device.entity.equipment.WarehouseInventory">
+        select * from device_management.warehouse_inventory where device_id = #{deviceId}
+    </select>
+
+    <select id="equipmentManagerMapperPageQuery"
+            resultType="com.device.entity.equipment.EquipmentOutboundRequest">
+        select * from device_management.equipment_outbound_request
+        <where>
+
+            <if test="status != null">
+                and status = 1
+            </if>
+
+            <if test="equipmentType != null" >
+                and equipment_type like
+                concat('%',#{equipmentType},'%')
+            </if>
+
+            <if test="equipmentName != null">
+                and equipment_name like
+                concat('%',#{equipmentName},'%')
+            </if>
+
+            <if test="beginTime != null">
+                and create_time &gt;= #{beginTime}
+            </if>
+            <if test="endTime != null">
+                and create_time &lt;= #{endTime}
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <!-- 根据申请单号查询出库申请 -->
+    <select id="selectByCode" resultType="com.device.entity.equipment.EquipmentOutboundRequest">
+        SELECT * FROM device_management.equipment_outbound_request WHERE request_code = #{requestCode}
+    </select>
+
+    <!-- 根据设备名称查询在库数量 -->
+    <select id="getDeviceCountByEquipmentName" resultType="int">
+        SELECT COUNT(*) FROM device_management.warehouse_inventory
+        WHERE equipment_name = #{equipmentName} AND status = 2 <!-- 2表示已入库 -->
+    </select>
+
+    <!-- 更新出库申请状态 -->
+    <update id="updateOutboundRequestStatus">
+        UPDATE device_management.equipment_outbound_request
+        SET status = #{status},
+            handler_id = #{handlerId},
+            handler_name = #{handlerName},
+            actual_outbound_date = #{actualOutboundDate},
+            update_time = #{updateTime},
+            update_by = #{updateBy}
+        WHERE request_id = #{requestId}
+    </update>
+
+    <!-- 查询符合条件的库存记录（状态为已入库的） -->
+    <select id="selectInventoryForOutbound" resultType="com.device.entity.equipment.WarehouseInventory">
+        SELECT * FROM device_management.warehouse_inventory
+        WHERE equipment_name = #{equipmentName}
+        AND warehouse_id = #{warehouseId}
+        AND status = 2 <!-- 2表示已入库 -->
+        LIMIT #{limit}
+    </select>
+
+    <!-- 更新库存状态 -->
+    <update id="updateInventoryStatus">
+        UPDATE device_management.warehouse_inventory
+        SET status = #{status},
+            update_time = #{updateTime},
+            update_by = #{updateBy}
+        WHERE inventory_id = #{inventoryId}
+    </update>
+
+    <!-- 更新库存中的设备ID -->
+    <update id="updateInventoryDeviceId">
+        UPDATE device_management.warehouse_inventory
+        SET device_id = #{deviceId},
+            update_time = #{updateTime},
+            update_by = #{updateBy}
+        WHERE inventory_id = #{inventoryId}
+    </update>
+
+    <!-- 插入设备基本信息 -->
+    <insert id="insertDeviceBaseInfo" useGeneratedKeys="true" keyProperty="deviceId">
+        INSERT INTO device_management.device_base_info (device_code, device_name, device_type, model, manufacturer,
+                                      install_date, install_location, area_id, team_id, status, create_time, update_time, create_by, update_by)
+        VALUES (
+                   CONCAT('DEV-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', LPAD(FLOOR(RAND() * 10000), 4, '0')),
+                   #{deviceName}, #{deviceType}, #{model}, #{manufacturer},
+                   #{installDate}, #{installLocation}, #{areaId}, #{teamId}, #{status},
+                   #{createTime}, #{updateTime}, #{createBy}, #{updateBy}
+               )
+    </insert>
+
+    <!-- 更新设备基本信息 -->
+    <update id="updateDeviceBaseInfo">
+        UPDATE device_management.device_base_info
+        SET device_name = #{deviceName},
+            device_type = #{deviceType},
+            model = #{model},
+            manufacturer = #{manufacturer},
+            install_date = #{installDate},
+            install_location = #{installLocation},
+            area_id = #{areaId},
+            team_id = #{teamId},
+            status = #{status},
+            update_time = #{updateTime},
+            update_by = #{updateBy}
+        WHERE device_id = #{deviceId}
+    </update>
+
+    <!-- 在现有的EquipmentManagerMapper.xml中添加以下SQL语句 -->
+
+    <!-- 统计设备总数 -->
+    <select id="countTotalDevices" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM device_management.warehouse_inventory
+    </select>
+
+    <!-- 统计在库设备数量 -->
+    <select id="countInStockDevices" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM device_management.warehouse_inventory
+        WHERE status = 2 <!-- 2表示已入库 -->
+    </select>
+
+    <!-- 统计今日出库数量 -->
+    <select id="countTodayOutbound" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM device_management.equipment_outbound_request
+        WHERE DATE(actual_outbound_date) = #{date}
+        AND status = 2 <!-- 2表示已出库 -->
+    </select>
+
+    <!-- 统计故障设备数量 -->
+    <select id="countPendingFault" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM device_management.device_base_info
+        WHERE status = 2 <!-- 2表示故障状态 -->
+    </select>
+
+    <!-- 获取最近待入库设备列表 -->
+    <select id="getRecentPendingInbound" resultType="com.device.entity.equipment.WarehouseInventory">
+        SELECT * FROM device_management.warehouse_inventory
+        WHERE status = 1 <!-- 1表示待入库 -->
+        ORDER BY create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 获取最近待出库申请列表 -->
+    <select id="getRecentPendingOutbound" resultType="com.device.entity.equipment.EquipmentOutboundRequest">
+        SELECT * FROM device_management.equipment_outbound_request
+        WHERE status = 1 <!-- 1表示待出库 -->
+        ORDER BY create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 统计月度入库数量 -->
+    <select id="countMonthlyInbound" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM device_management.warehouse_inventory
+        WHERE inbound_date BETWEEN #{startDate} AND #{endDate}
+    </select>
+
+    <!-- 统计月度出库数量 -->
+    <select id="countMonthlyOutbound" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM device_management.equipment_outbound_request
+        WHERE actual_outbound_date BETWEEN #{startDate} AND #{endDate}
+        AND status = 2 <!-- 2表示已出库 -->
+    </select>
+
+    <!-- 按设备类型统计数量 -->
+    <select id="countDevicesByType" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM device_management.warehouse_inventory
+        WHERE equipment_type = #{equipmentType}
+    </select>
+
+
+
+</mapper>
+

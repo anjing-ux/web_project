@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.device.mapper.EquipmentPurchaseMapper">
+
+    <!-- 插入采购记录 -->
+    <insert id="insertEquipmentPurchase" parameterType="EquipmentPurchase" useGeneratedKeys="true" keyProperty="purchaseId">
+        INSERT INTO device_management.equipment_purchase (
+            equipment_type, equipment_name, model_number, specification, manufacturer, supplier,
+            purchase_date, purchase_amount, quantity, unit, warranty_period, expected_life,
+            purchase_document_no, contract_no, purchase_person, delivery_date, acceptance_date,
+            acceptance_result, acceptance_notes, status, remark, create_by, is_deleted,update_time,update_by
+        ) VALUES (
+                     #{equipmentType}, #{equipmentName}, #{modelNumber}, #{specification}, #{manufacturer},
+                     #{supplier}, #{purchaseDate}, #{purchaseAmount}, #{quantity}, #{unit},
+                     #{warrantyPeriod}, #{expectedLife}, #{purchaseDocumentNo}, #{contractNo},
+                     #{purchasePerson}, #{deliveryDate}, #{acceptanceDate}, #{acceptanceResult},
+                     #{acceptanceNotes}, #{status}, #{remark}, #{createBy}, #{isDeleted},#{updateTime},#{updateBy}
+                 )
+    </insert>
+
+    <!-- 批量插入设备基础信息 -->
+    <insert id="insertDeviceBaseInfo" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="deviceId">
+        INSERT INTO device_management.device_base_info (
+        device_code, device_name, device_type, model, brand, manufacturer,
+        production_date, purchase_date, warranty_period,
+        status, create_time, update_time,create_by
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.deviceCode}, #{item.deviceName}, #{item.deviceType}, #{item.model}, #{item.brand}, #{item.manufacturer},
+            #{item.productionDate}, #{item.purchaseDate}, #{item.warrantyPeriod},
+            #{item.status}, #{item.createTime}, #{item.updateTime},#{item.createBy}
+            )
+        </foreach>
+    </insert>
+
+<insert id="batchInsertWarehouseInventory" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="inventoryId">
+    INSERT INTO device_management.warehouse_inventory (
+    purchase_id, device_id,equipment_type, equipment_name, model_number,
+    manufacturer, batch_number, unit, status,warranty_period,expected_life, create_time, update_time
+    ) VALUES
+    <foreach collection="list" item="item" separator=",">
+        (
+        #{item.purchaseId},#{item.deviceId}, #{item.equipmentType}, #{item.equipmentName}, #{item.modelNumber},
+        #{item.manufacturer}, #{item.batchNumber}, #{item.unit},#{item.status},#{item.warrantyPeriod},
+         #{item.expectedLife}, #{item.createTime}, #{item.updateTime}
+        )
+    </foreach>
+</insert>
+
+    <update id="updatePurchaseForm" parameterType="EquipmentPurchase">
+        UPDATE device_management.equipment_purchase
+        <set>
+            <if test="modelNumber != null and modelNumber != ''">model_number = #{modelNumber},</if>
+            <if test="specification != null and specification != ''">specification = #{specification},</if>
+            <if test="manufacturer != null and manufacturer != ''">manufacturer = #{manufacturer},</if>
+            <if test="supplier != null and supplier != ''">supplier = #{supplier},</if>
+            <if test="purchaseDate != null">purchase_date = #{purchaseDate},</if>
+            <if test="purchaseAmount != null">purchase_amount = #{purchaseAmount},</if>
+            <if test="quantity != null">quantity = #{quantity},</if>
+            <if test="unit != null and unit != ''">unit = #{unit},</if>
+            <if test="warrantyPeriod != null">warranty_period = #{warrantyPeriod},</if>
+            <if test="expectedLife != null">expected_life = #{expectedLife},</if>
+            <if test="purchaseDocumentNo != null and purchaseDocumentNo != ''">purchase_document_no = #{purchaseDocumentNo},</if>
+            <if test="contractNo != null and contractNo != ''">contract_no = #{contractNo},</if>
+            <if test="purchasePerson != null and purchasePerson != ''">purchase_person = #{purchasePerson},</if>
+            <if test="image != null and image != ''">image = #{image},</if>
+            <if test="deliveryDate != null">delivery_date = #{deliveryDate},</if>
+            <if test="acceptanceDate != null">acceptance_date = #{acceptanceDate},</if>
+            <if test="acceptanceResult != null and acceptanceResult != ''">acceptance_result = #{acceptanceResult},</if>
+            <if test="acceptanceNotes != null and acceptanceNotes != ''">acceptance_notes = #{acceptanceNotes},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+            <if test="cancelReason != null and cancelReason != ''">cancel_reason = #{cancelReason},</if>
+            <if test="refuseReason != null and refuseReason != ''">refuse_reason = #{refuseReason},</if>
+            <if test="promptMessage != null and promptMessage != ''">prompt_message = #{promptMessage},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="isDeleted != null and isDeleted != ''">is_deleted = #{isDeleted}</if>
+        </set>
+        WHERE purchase_id = #{purchaseId}
+    </update>
+
+
+    <update id="cancelPurchaseForm" parameterType="EquipmentPurchase">
+        update device_management.equipment_purchase
+        <set>
+        <if test="isDeleted != null and isDeleted != ''">is_deleted = #{isDeleted}</if>
+        <if test="status != null and status != ''">status = #{status}</if>
+        </set>
+        WHERE purchase_id = #{purchaseId}
+    </update>
+
+
+    <update id="confirmPurchasingForm" parameterType="EquipmentPurchase">
+        update device_management.equipment_purchase
+        <set>
+            <if test="modelNumber != null and modelNumber != ''">model_number = #{modelNumber},</if>
+            <if test="specification != null and specification != ''">specification = #{specification},</if>
+            <if test="manufacturer != null and manufacturer != ''">manufacturer = #{manufacturer},</if>
+            <if test="supplier != null and supplier != ''">supplier = #{supplier},</if>
+            <if test="purchaseDate != null">purchase_date = #{purchaseDate},</if>
+            <if test="purchaseAmount != null">purchase_amount = #{purchaseAmount},</if>
+            <if test="quantity != null">quantity = #{quantity},</if>
+            <if test="unit != null and unit != ''">unit = #{unit},</if>
+            <if test="warrantyPeriod != null">warranty_period = #{warrantyPeriod},</if>
+            <if test="expectedLife != null">expected_life = #{expectedLife},</if>
+            <if test="purchaseDocumentNo != null and purchaseDocumentNo != ''">purchase_document_no = #{purchaseDocumentNo},</if>
+            <if test="contractNo != null and contractNo != ''">contract_no = #{contractNo},</if>
+            <if test="purchasePerson != null and purchasePerson != ''">purchase_person = #{purchasePerson},</if>
+            <if test="image != null and image != ''">image = #{image},</if>
+            <if test="deliveryDate != null">delivery_date = #{deliveryDate},</if>
+            <if test="acceptanceDate != null">acceptance_date = #{acceptanceDate},</if>
+            <if test="acceptanceResult != null and acceptanceResult != ''">acceptance_result = #{acceptanceResult},</if>
+            <if test="acceptanceNotes != null and acceptanceNotes != ''">acceptance_notes = #{acceptanceNotes},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+            <if test="cancelReason != null and cancelReason != ''">cancel_reason = #{cancelReason},</if>
+            <if test="refuseReason != null and refuseReason != ''">refuse_reason = #{refuseReason},</if>
+            <if test="promptMessage != null and promptMessage != ''">prompt_message = #{promptMessage},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="isDeleted != null and isDeleted != ''">is_deleted = #{isDeleted}</if>
+        </set>
+        where purchase_id = #{purchaseId}
+    </update>
+
+
+    <update id="reviewedEquipmentRequest" parameterType="com.device.entity.equipment.EquipmentOutboundRequest">
+        UPDATE device_management.equipment_outbound_request
+        <set>
+            <if test="requestCode != null and requestCode != ''">request_code = #{requestCode},</if>
+            <if test="warehouseId != null">warehouse_id = #{warehouseId},</if>
+            <if test="applicantId != null">applicant_id = #{applicantId},</if>
+            <if test="applicantName != null and applicantName != ''">applicant_name = #{applicantName},</if>
+            <if test="applicantDepartment != null and applicantDepartment != ''">applicant_department = #{applicantDepartment},</if>
+            <if test="applicantPhone != null and applicantPhone != ''">applicant_phone = #{applicantPhone},</if>
+            <if test="equipmentName != null and equipmentName != ''">equipment_name = #{equipmentName},</if>
+            <if test="equipmentType != null">equipment_type = #{equipmentType},</if>
+            <if test="quantity != null">quantity = #{quantity},</if>
+            <if test="targetAreaId != null">target_area_id = #{targetAreaId},</if>
+            <if test="targetTeamId != null">target_team_id = #{targetTeamId},</if>
+            <if test="targetLocation != null and targetLocation != ''">target_location = #{targetLocation},</if>
+            <if test="plannedOutboundDate != null">planned_outbound_date = #{plannedOutboundDate},</if>
+            <if test="actualOutboundDate != null">actual_outbound_date = #{actualOutboundDate},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="approverId != null">approver_id = #{approverId},</if>
+            <if test="approverName != null and approverName != ''">approver_name = #{approverName},</if>
+            <if test="approvalTime != null">approval_time = #{approvalTime},</if>
+            <if test="approvalComment != null and approvalComment != ''">approval_comment = #{approvalComment},</if>
+            <if test="handlerId != null">handler_id = #{handlerId},</if>
+            <if test="handlerName != null and handlerName != ''">handler_name = #{handlerName},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="createBy != null and createBy != ''">create_by = #{createBy},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy}</if>
+        </set>
+        WHERE request_code= #{requestCode}
+    </update>
+
+
+    <select id="pageQuery" resultType="EquipmentPurchase" parameterType="EquipmentPurchasePageQueryDTO">
+        select * from device_management.equipment_purchase
+        <where>
+
+            <if test="status != null">
+                and status = #{status}
+            </if>
+
+            <if test="equipmentType != null" >
+                and equipment_type like
+                concat('%',#{equipmentType},'%')
+            </if>
+
+            <if test="equipmentName != null">
+                and equipment_name like
+                concat('%',#{equipmentName},'%')
+            </if>
+
+            <if test="beginTime != null">
+                and create_time &gt;= #{beginTime}
+            </if>
+            <if test="endTime != null">
+                and create_time &lt;= #{endTime}
+            </if>
+
+            <if test="isDeleted != null">
+                and is_deleted = #{isDeleted}
+            </if>
+        </where>
+            order by create_time desc
+    </select>
+
+
+    <select id="PurchaseById" resultType="com.device.entity.equipment.EquipmentPurchase" parameterType="EquipmentPurchase">
+        select * from device_management.equipment_purchase where purchase_id = #{purchaseId}
+    </select>
+
+
+    <select id="countStatus" resultType="java.lang.Integer">
+        select count(purchase_id) from device_management.equipment_purchase
+        where status = #{status}
+    </select>
+    <select id="getCompletedPurchases" resultType="com.device.entity.equipment.EquipmentPurchase"
+            parameterType="com.device.dto.equipment.EquipmentPurchasePageQueryDTO">
+        select * from equipment_purchase
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="equipmentName != null and equipmentName != ''">
+                and equipment_name like concat('%',#{equipmentName},'%')
+            </if>
+            <if test="equipmentType != null">
+                and equipment_type = #{equipmentType}
+            </if>
+            <if test="beginTime != null and beginTime != ''">
+                and create_time >= #{beginTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                and create_time ;lt= #{endTime}
+            </if>
+        </where>
+        order by create_time DESC
+    </select>
+</mapper>

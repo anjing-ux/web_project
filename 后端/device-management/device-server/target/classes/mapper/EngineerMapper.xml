@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.device.mapper.EngineerMapper">
+
+
+
+
+    <!-- 创建故障审核记录 -->
+    <insert id="createFaultVerify" useGeneratedKeys="true" keyProperty="verifyId">
+        INSERT INTO fault_verify (
+            fault_id, verify_step, area_id, team_id, create_time, update_time
+        ) VALUES (
+                     #{faultId}, #{verifyStep}, #{areaId}, #{teamId}, #{createTime}, #{updateTime}
+                 )
+    </insert>
+    <insert id="createInspectionVerify">
+        INSERT INTO inspection_verify (
+            inspection_id, verify_step, area_id, team_id, create_time, update_time
+        ) VALUES (
+                     #{inspectionId}, #{verifyStep}, #{areaId}, #{teamId}, #{createTime}, #{updateTime}
+                 )
+    </insert>
+    <insert id="createMaintenanceVerify">
+        INSERT INTO maintenance_verify (
+            maintenance_id, verify_step, area_id, team_id, create_time, update_time
+        ) VALUES (
+                     #{maintenanceId}, #{verifyStep}, #{areaId}, #{teamId}, #{createTime}, #{updateTime}
+                 )
+    </insert>
+    <insert id="createDetectionVerify">
+        INSERT INTO detection_verify (
+            detection_id, verify_step, area_id, team_id, create_time, update_time
+        ) VALUES (
+                     #{detectionId}, #{verifyStep}, #{areaId}, #{teamId}, #{createTime}, #{updateTime}
+                 )
+    </insert>
+
+
+    <!-- 更新设备信息 工程师提交 -->
+    <update id="updateDeviceFault" parameterType="com.device.entity.fault.DeviceFault">
+        UPDATE device_fault
+        <set>
+            <!-- 检查非空且非null -->
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="deviceCode != null and deviceCode != ''">device_code = #{deviceCode},</if>
+            <if test="deviceName != null and deviceName != ''">device_name = #{deviceName},</if>
+            <if test="faultType != null">fault_type = #{faultType},</if>
+            <if test="faultLevel != null">fault_level = #{faultLevel},</if>
+            <if test="faultDesc != null and faultDesc != ''">fault_desc = #{faultDesc},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="processDesc != null and processDesc != ''">process_desc = #{processDesc},</if>
+            <if test="measures != null and measures != ''">measures = #{measures},</if>
+            <if test="beforePhoto != null and beforePhoto != ''">before_photo = #{beforePhoto},</if>
+            <if test="afterPhoto != null and afterPhoto != ''">after_photo = #{afterPhoto},</if>
+            <if test="processorId != null">processor_id = #{processorId},</if>
+            <if test="processorName != null and processorName != ''">processor_name = #{processorName},</if>
+            <if test="areaId != null">area_id = #{areaId},</if>
+            <if test="teamId != null">team_id = #{teamId},</if>
+            update_time = NOW(),
+            complete_time = NOW()
+        </set>
+        WHERE fault_id = #{faultId}
+    </update>
+    <update id="updateDetectionRecord" parameterType="com.device.entity.detection.DetectionRecord">
+        UPDATE detection_record
+        <set>
+            <if test="detectionCode != null">detection_code = #{detectionCode},</if>
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="deviceCode != null">device_code = #{deviceCode},</if>
+            <if test="deviceName != null">device_name = #{deviceName},</if>
+            <if test="itemName != null">item_name = #{itemName},</if>
+            <if test="itemResult != null">item_result = #{itemResult},</if>
+            <if test="photo != null">photo = #{photo},</if>
+            <if test="operatorId != null">operator_id = #{operatorId},</if>
+            <if test="operatorName != null">operator_name = #{operatorName},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="completeTime != null">complete_time = #{completeTime},</if>
+            <if test="closeTime != null">close_time = #{closeTime},</if>
+            <if test="areaId != null">area_id = #{areaId},</if>
+            <if test="teamId != null">team_id = #{teamId},</if>
+            update_time = NOW()
+        </set>
+        WHERE detection_id = #{detectionId}
+    </update>
+    <update id="updateInspectionRecord" parameterType="com.device.entity.inspection.InspectionRecord">
+        UPDATE inspection_record
+        <set>
+            <if test="inspectionCode != null">inspection_code = #{inspectionCode},</if>
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="deviceCode != null">device_code = #{deviceCode},</if>
+            <if test="deviceName != null">device_name = #{deviceName},</if>
+            <if test="itemName != null">item_name = #{itemName},</if>
+            <if test="itemResult != null">item_result = #{itemResult},</if>
+            <if test="abnormalDesc != null">abnormal_desc = #{abnormalDesc},</if>
+            <if test="photo != null">photo = #{photo},</if>
+            <if test="operatorId != null">operator_id = #{operatorId},</if>
+            <if test="operatorName != null">operator_name = #{operatorName},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="completeTime != null">complete_time = #{completeTime},</if>
+            <if test="closeTime != null">close_time = #{closeTime},</if>
+            <if test="areaId != null">area_id = #{areaId},</if>
+            <if test="teamId != null">team_id = #{teamId},</if>
+            update_time = NOW()
+        </set>
+        WHERE inspection_id = #{inspectionId}
+    </update>
+    <update id="updateMaintenanceRecord" parameterType="com.device.entity.maintenance.MaintenanceRecord">
+        UPDATE maintenance_record
+        <set>
+            <if test="maintenanceCode != null">maintenance_code = #{maintenanceCode},</if>
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="deviceCode != null">device_code = #{deviceCode},</if>
+            <if test="deviceName != null">device_name = #{deviceName},</if>
+            <if test="itemName != null">item_name = #{itemName},</if>
+            <if test="itemResult != null">item_result = #{itemResult},</if>
+            <if test="beforePhoto != null">before_photo = #{beforePhoto},</if>
+            <if test="afterPhoto != null">after_photo = #{afterPhoto},</if>
+            <if test="operatorId != null">operator_id = #{operatorId},</if>
+            <if test="operatorName != null">operator_name = #{operatorName},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="completeTime != null">complete_time = #{completeTime},</if>
+            <if test="closeTime != null">close_time = #{closeTime},</if>
+            <if test="areaId != null">area_id = #{areaId},</if>
+            <if test="teamId != null">team_id = #{teamId},</if>
+            update_time = NOW()
+        </set>
+        WHERE maintenance_id = #{maintenanceId}
+    </update>
+
+
+
+
+    <!--获取不同任务列表-->
+    <select id="getFaultTasks" resultType="com.device.entity.fault.FaultTask"
+            parameterType="com.device.dto.fault.FaultTaskQueryDTO">
+        select * from fault_task
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="userId != null">
+                and executor_id = #{userId}
+            </if>
+            <if test="keyWords != null and keyWords != ''">
+                and (
+                task_id like concat('%',#{keyWords},'%') or
+                device_name like concat('%',#{keyWords},'%')
+                )
+            </if>
+
+        </where>
+        order by create_time DESC
+    </select>
+    <select id="getInspectionTasks" resultType="com.device.entity.inspection.InspectionTask">
+        select * from inspection_task
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="userId != null">
+                and executor_id = #{userId}
+            </if>
+            <if test="keyWords != null and keyWords != ''">
+                and(
+                task_id like concat('%',#{keyWords},'%') or
+                device_name like concat('%',#{keyWords},'%')
+                )
+            </if>
+
+        </where>
+        order by create_time DESC
+    </select>
+    <select id="getMaintenanceTasks" resultType="com.device.entity.maintenance.MaintenanceTask">
+        select * from maintenance_task
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="userId != null">
+                and executor_id = #{userId}
+            </if>
+            <if test="keyWords != null and keyWords != ''">
+                and(
+                task_id like concat('%',#{keyWords},'%') or
+                device_name like concat('%',#{keyWords},'%')
+                )
+            </if>
+        </where>
+    </select>
+    <select id="getDetectionTasks" resultType="com.device.entity.detection.DetectionTask">
+        select * from detection_task
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="userId != null">
+                and executor_id = #{userId}
+            </if>
+            <if test="keyWords != null and keyWords != ''">
+                and(
+                task_id like concat('%',#{keyWords},'%') or
+                device_name like concat('%',#{keyWords},'%')
+                )
+            </if>
+        </where>
+        order by create_time DESC
+    </select>
+
+    <select id="selectEngineersByAreaAndTeam" resultType="com.device.entity.user.SysUser">
+        SELECT
+            user_id AS userId,
+            username,
+            sex,
+            password,
+            real_name AS realName,
+            phone,
+            id_number AS idNumber,
+            avatar,
+            role_id AS roleId,
+            status,
+            create_time AS createTime,
+            update_time AS updateTime,
+            area_id AS areaId,
+            team_id AS teamId
+        FROM sys_user
+        WHERE area_id = #{areaId}
+          AND team_id = #{teamId}
+          AND role_id = 6
+        ORDER BY real_name
+    </select>
+</mapper>

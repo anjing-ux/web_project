@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.device.mapper.TeamLeaderMapper">
+
+
+    <insert id="setEquipmentOutboundRequest" parameterType="com.device.entity.equipment.EquipmentOutboundRequest" useGeneratedKeys="true" keyProperty="requestId">
+        INSERT INTO device_management.equipment_outbound_request (
+            request_code, warehouse_id, applicant_id, applicant_name, applicant_department,
+            applicant_phone, equipment_name, equipment_type, quantity, target_area_id,
+            target_team_id, target_location, planned_outbound_date, actual_outbound_date,
+            status, approver_id, approver_name, approval_time, approval_comment,
+            handler_id, handler_name, remark, create_time, create_by,
+            update_time, update_by
+        ) VALUES (
+                     #{requestCode}, #{warehouseId}, #{applicantId}, #{applicantName}, #{applicantDepartment},
+                     #{applicantPhone}, #{equipmentName}, #{equipmentType}, #{quantity}, #{targetAreaId},
+                     #{targetTeamId}, #{targetLocation}, #{plannedOutboundDate}, #{actualOutboundDate},
+                     #{status}, #{approverId}, #{approverName}, #{approvalTime}, #{approvalComment},
+                     #{handlerId}, #{handlerName}, #{remark}, #{createTime}, #{createBy},
+                     #{updateTime}, #{updateBy}
+                 )
+    </insert>
+
+
+    <select id="pageQuery" resultType="com.device.entity.equipment.EquipmentOutboundRequest" parameterType="EquipmentRequestPageQueryDTO">
+            select * from device_management.equipment_outbound_request
+            <where>
+
+                <if test="status != null">
+                    and status = #{status}
+                </if>
+
+                <if test="equipmentType != null" >
+                    and equipment_type like
+                    concat('%',#{equipmentType},'%')
+                </if>
+
+                <if test="equipmentName != null">
+                    and equipment_name like
+                    concat('%',#{equipmentName},'%')
+                </if>
+
+                <if test="beginTime != null">
+                    and create_time &gt;= #{beginTime}
+                </if>
+                <if test="endTime != null">
+                    and create_time &lt;= #{endTime}
+                </if>
+            </where>
+            order by create_time desc
+    </select>
+
+    <select id="equipmentRequestByCode" resultType="com.device.entity.equipment.EquipmentOutboundRequest">
+        select * from device_management.equipment_outbound_request where request_code = #{requestCode}
+    </select>
+
+    <!-- 创建故障任务 -->
+    <insert id="createFaultTask" useGeneratedKeys="true" keyProperty="taskId">
+        INSERT INTO fault_task (
+            fault_id, fault_code, device_id, device_code, device_name,
+            task_name, start_time, executor_id, executor_name, status,
+            area_id, team_id, create_time
+        ) VALUES (
+            #{faultId}, #{faultCode}, #{deviceId}, #{deviceCode}, #{deviceName},
+            #{taskName}, #{startTime}, #{executorId}, #{executorName}, #{status},
+            #{areaId}, #{teamId}, #{createTime}
+        )
+    </insert>
+
+    <!-- 更新设备故障状态 -->
+    <update id="updateDeviceFaultStatus">
+        UPDATE device_fault
+        SET status = #{status},
+            update_time = NOW()
+        WHERE fault_id = #{faultId}
+    </update>
+
+    <!-- 创建设备故障记录 -->
+    <insert id="createDeviceFault" useGeneratedKeys="true" keyProperty="faultId">
+        INSERT INTO device_fault (
+            fault_code, device_id, device_code, device_name,
+            report_time, reporter_id, reporter_name, reporter_phone,
+            status, processor_id, processor_name, complete_time,
+            area_id, team_id, create_time
+        ) VALUES (
+            #{faultCode}, #{deviceId}, #{deviceCode}, #{deviceName},
+            #{reportTime}, #{reporterId}, #{reporterName}, #{reporterPhone},
+            #{status}, #{processorId}, #{processorName}, #{completeTime},
+            #{areaId}, #{teamId}, NOW()
+        )
+    </insert>
+    
+    <!-- 更新审核记录 -->
+    <!-- 更新审核记录 -->
+    <update id="updateFaultVerify">
+        UPDATE fault_verify
+        <set>
+            <if test="verifyStep != null">verify_step = #{verifyStep},</if>
+            <if test="verifyOpinion != null">verify_opinion = #{verifyOpinion},</if>
+            <if test="satisfactionScore != null">satisfaction_score = #{satisfactionScore},</if>
+            <if test="operatorId != null">operator_id = #{operatorId},</if>
+            <if test="operatorName != null">operator_name = #{operatorName},</if>
+            <if test="signature != null">signature = #{signature},</if>
+            <if test="firstReviewerId != null">first_reviewer_id = #{firstReviewerId},</if>
+            <if test="firstReviewerName != null">first_reviewer_name = #{firstReviewerName},</if>
+            <if test="secondReviewerId != null">second_reviewer_id = #{secondReviewerId},</if>
+            <if test="secondReviewerName != null">second_reviewer_name = #{secondReviewerName},</if>
+            <if test="verifyTime != null">verify_time = #{verifyTime},</if>
+            update_time = NOW()
+        </set>
+        WHERE verify_id = #{verifyId}
+    </update>
+    
+    <!-- 更新故障任务状态 -->
+    <update id="updateFaultTaskStatus">
+        UPDATE fault_task
+        SET status = #{status},
+            update_time = NOW()
+        WHERE fault_id = #{faultId}
+    </update>
+    
+    <!-- 更新故障任务的关闭时间 -->
+    <update id="updateFaultTaskCloseTime">
+        UPDATE fault_task
+        SET close_time = NOW(),
+            update_time = NOW()
+        WHERE fault_id = #{faultId}
+    </update>
+    
+    <!-- 更新故障记录的关闭时间 -->
+    <update id="updateDeviceFaultCloseTime">
+        UPDATE device_fault
+        SET close_time = NOW(),
+            update_time = NOW()
+        WHERE fault_id = #{faultId}
+    </update>
+
+    <!-- 分页查询待审核记录 -->
+    <!-- 分页查询待审核的故障列表 -->
+    <select id="pageQueryPendingVerify" resultType="com.device.entity.fault.FaultVerify">
+        SELECT fv.*, df.fault_code, df.device_name, df.processor_name,
+               df.fault_type, df.fault_level, df.fault_desc, df.process_desc,
+               df.measures, df.before_photo, df.after_photo, df.complete_time
+        FROM fault_verify fv
+        JOIN device_fault df ON fv.fault_id = df.fault_id
+        WHERE 1=1
+        <if test="areaId != null">
+            AND fv.area_id = #{areaId}
+        </if>
+        <if test="teamId != null">
+            AND fv.team_id = #{teamId}
+        </if>
+        <if test="verifyStep != null">
+            AND fv.verify_step = #{verifyStep}
+        </if>
+        ORDER BY fv.create_time DESC
+    </select>
+
+    <!-- 根据ID获取审核记录 -->
+    <select id="getFaultVerifyById" resultType="com.device.entity.fault.FaultVerify">
+        SELECT fv.*, df.fault_code, df.device_name, df.processor_name,
+               df.fault_type, df.fault_level, df.fault_desc, df.process_desc,
+               df.measures, df.before_photo, df.after_photo, df.complete_time
+        FROM fault_verify fv
+        JOIN device_fault df ON fv.fault_id = df.fault_id
+        WHERE fv.verify_id = #{verifyId}
+    </select>
+
+    <!-- 分页查询待审核的故障记录表 -->
+    <!-- 分页查询不同审核阶段的故障记录表 -->
+    <select id="pageQueryPendingFaults" resultType="com.device.vo.fault.FaultQueryVO">
+        SELECT df.*,fv.verify_step
+        FROM device_fault df
+        JOIN fault_verify fv ON df.fault_id = fv.fault_id
+        <where>
+            <if test="areaId != null">
+                AND df.area_id = #{areaId}
+            </if>
+            <if test="teamId != null">
+                AND df.team_id = #{teamId}
+            </if>
+            <if test="deviceName != null and deviceName != ''">
+                AND df.device_name like Concat('%',#{deviceName}, '%')
+            </if>
+            <if test="faultType != null and faultType != ''">
+                AND df.fault_type = #{faultType}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND df.report_time &gt;= #{startTime}
+            </if>
+            <if test="completeTime != null and completeTime != ''">
+                AND df.report_time &lt;= #{completeTime}
+            </if>
+            <if test="verifyStep != null">
+                <choose>
+                    <when test="verifyStep == -1">
+                        <!-- 班组长-已完成：verifyStep != 1 -->
+                        AND fv.verify_step != 1
+                    </when>
+                    <when test="verifyStep == -2">
+                        <!-- 工区长-全部审核：verifyStep = 2 或 verifyStep = 3 -->
+                        AND (fv.verify_step = 2 OR fv.verify_step = 3)
+                    </when>
+                    <otherwise>
+                        AND fv.verify_step = #{verifyStep}
+                    </otherwise>
+                </choose>
+            </if>
+            and df.status &gt; 1
+        </where>
+        order by fv.create_time DESC
+    </select>
+
+    <!-- 根据故障ID获取任务详情 -->
+    <select id="getFaultTaskById" resultType="com.device.entity.fault.FaultTask">
+        SELECT * FROM fault_task WHERE fault_id = #{faultId}
+    </select>
+
+    <!-- 创建巡检任务 -->
+    <insert id="createInspectionTask" useGeneratedKeys="true" keyProperty="taskId">
+        INSERT INTO inspection_task (
+            inspection_id, inspection_code, device_id, device_code, device_name,
+            task_name, start_time, end_time, executor_id, executor_name,
+            status, area_id, team_id, create_time, update_time
+        ) VALUES (
+            #{inspectionId}, #{inspectionCode}, #{deviceId}, #{deviceCode}, #{deviceName},
+            #{taskName}, #{startTime}, #{endTime}, #{executorId}, #{executorName},
+            #{status}, #{areaId}, #{teamId}, #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <!-- 创建巡检记录 -->
+    <insert id="createInspectionRecord" useGeneratedKeys="true" keyProperty="inspectionId">
+        INSERT INTO inspection_record (
+            inspection_code, device_id, device_code, device_name,status,
+            operator_id, operator_name, start_time, area_id, team_id, create_time
+        ) VALUES (
+             #{inspectionCode}, #{deviceId}, #{deviceCode}, #{deviceName},#{status},
+            #{operatorId}, #{operatorName}, #{startTime}, #{areaId}, #{teamId}, #{createTime}
+        )
+    </insert>
+
+    <!-- 获取所有未开始且开始时间已到的巡检任务 -->
+    <select id="getInspectionTasksByStartTime" resultType="com.device.entity.inspection.InspectionTask">
+        SELECT * FROM inspection_task 
+        WHERE status = 0 AND start_time &lt;= #{now}
+    </select>
+
+    <!-- 更新巡检任务状态 -->
+    <update id="updateInspectionTaskStatus">
+        UPDATE inspection_task 
+        SET status = #{status}, update_time = NOW() 
+        WHERE task_id = #{taskId}
+    </update>
+
+    <!-- 更新巡检任务的巡检ID -->
+    <update id="updateInspectionTaskInspectionId">
+        UPDATE inspection_task 
+        SET inspection_id = #{inspectionId}, update_time = NOW() 
+        WHERE task_id = #{taskId}
+    </update>
+
+    <!-- 创建巡检审核记录 -->
+    <insert id="createInspectionVerify" useGeneratedKeys="true" keyProperty="verifyId">
+        INSERT INTO inspection_verify (
+            inspection_id, task_id, verify_step, area_id, team_id, create_time, update_time
+        ) VALUES (
+            #{inspectionId}, #{taskId}, #{verifyStep}, #{areaId}, #{teamId}, #{createTime}, #{updateTime}
+        )
+    </insert>
+    
+    <!-- 更新巡检审核记录 -->
+    <update id="updateInspectionVerify">
+        UPDATE inspection_verify
+        <set>
+            <if test="verifyStep != null">verify_step = #{verifyStep},</if>
+            <if test="verifyResult != null">verify_result = #{verifyResult},</if>
+            <if test="verifyOpinion != null">verify_opinion = #{verifyOpinion},</if>
+            <if test="satisfactionScore != null">satisfaction_score = #{satisfactionScore},</if>
+            <if test="operatorId != null">operator_id = #{operatorId},</if>
+            <if test="operatorName != null">operator_name = #{operatorName},</if>
+            <if test="signature != null">signature = #{signature},</if>
+            <if test="firstReviewerId != null">first_reviewer_id = #{firstReviewerId},</if>
+            <if test="firstReviewerName != null">first_reviewer_name = #{firstReviewerName},</if>
+            <if test="secondReviewerId != null">second_reviewer_id = #{secondReviewerId},</if>
+            <if test="secondReviewerName != null">second_reviewer_name = #{secondReviewerName},</if>
+            <if test="verifyTime != null">verify_time = #{verifyTime},</if>
+            update_time = NOW()
+        </set>
+        WHERE verify_id = #{verifyId}
+    </update>
+    
+    <!-- 删除巡检审核记录 -->
+    <delete id="deleteInspectionVerify">
+        DELETE FROM inspection_verify WHERE verify_id = #{verifyId}
+    </delete>
+
+    <!-- 根据巡检ID获取审核记录 -->
+    <select id="getInspectionVerifyByInspectionId" resultType="com.device.entity.inspection.InspectionVerify">
+        SELECT iv.*, ir.device_name, ir.operator_name, ir.item_result, ir.item_name, 
+               ir.abnormal_desc, ir.photo, ir.complete_time
+        FROM inspection_verify iv
+        JOIN inspection_record ir ON iv.inspection_id = ir.inspection_id
+        WHERE iv.inspection_id = #{inspectionId}
+    </select>
+
+    <!-- 根据审核ID获取审核记录 -->
+    <select id="getInspectionVerifyById" resultType="com.device.entity.inspection.InspectionVerify">
+        SELECT iv.*, ir.device_name, ir.operator_name, ir.item_result, ir.item_name, 
+               ir.abnormal_desc, ir.photo, ir.complete_time
+        FROM inspection_verify iv
+        JOIN inspection_record ir ON iv.inspection_id = ir.inspection_id
+        WHERE iv.verify_id = #{verifyId}
+    </select>
+
+    <!-- 更新巡检任务状态 -->
+    <update id="updateInspectionTaskStatusByInspectionId">
+        UPDATE inspection_task
+        SET status = #{status},
+            update_time = NOW()
+        WHERE inspection_id = #{inspectionId}
+    </update>
+
+    <!-- 更新巡检记录状态 -->
+    <update id="updateInspectionRecordStatus">
+        UPDATE inspection_record
+        SET status = #{status},
+            update_time = NOW()
+        WHERE inspection_id = #{inspectionId}
+    </update>
+
+    <!-- 更新巡检记录的关闭时间 -->
+    <update id="updateInspectionRecordCloseTime">
+        UPDATE inspection_record
+        SET close_time = NOW(),
+            update_time = NOW()
+        WHERE inspection_id = #{inspectionId}
+    </update>
+
+    <!-- 分页查询待审核的巡检列表 -->
+    <select id="pageQueryPendingInspections" resultType="com.device.vo.inspection.InspectionQueryVO">
+        SELECT ir.*,iv.verify_step
+        FROM inspection_record ir
+        JOIN inspection_verify iv ON ir.inspection_id = iv.inspection_id
+        <where>
+            <if test="areaId != null">
+                AND ir.area_id = #{areaId}
+            </if>
+            <if test="teamId != null">
+                AND ir.team_id = #{teamId}
+            </if>
+            <if test="verifyStep != null">
+                <choose>
+                    <when test="verifyStep == -1">
+                        <!-- 班组长-已完成：verifyStep != 1 -->
+                        AND iv.verify_step != 1
+                    </when>
+                    <when test="verifyStep == -2">
+                        <!-- 工区长-全部审核：verifyStep = 2 或 verifyStep = 3 -->
+                        AND (iv.verify_step = 2 OR iv.verify_step = 3)
+                    </when>
+                    <otherwise>
+                        AND iv.verify_step = #{verifyStep}
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="deviceName != null and deviceName != ''">
+                AND ir.device_name LIKE CONCAT('%', #{deviceName}, '%')
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND ir.create_time &gt;= #{startTime}
+            </if>
+            <if test="completeTime != null and completeTime != ''">
+                AND ir.create_time &lt;= #{completeTime}
+            </if>
+        </where>
+        ORDER BY ir.create_time DESC
+    </select>
+
+    <!-- 创建检测任务 -->
+    <insert id="createDetectionTask" useGeneratedKeys="true" keyProperty="taskId">
+        INSERT INTO detection_task (
+            detection_id, detection_code, device_id, device_code, device_name,
+            task_name, start_time, end_time, executor_id, executor_name,
+            status, area_id, team_id, create_time, update_time
+        ) VALUES (
+            #{detectionId}, #{detectionCode}, #{deviceId}, #{deviceCode}, #{deviceName},
+            #{taskName}, #{startTime}, #{endTime}, #{executorId}, #{executorName},
+            #{status}, #{areaId}, #{teamId}, #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <!-- 创建检测记录 -->
+    <insert id="createDetectionRecord" useGeneratedKeys="true" keyProperty="detectionId">
+        INSERT INTO detection_record (
+            detection_code, device_id, device_code, device_name,
+            operator_id, operator_name, start_time, area_id, team_id, create_time, status
+        ) VALUES (
+            #{detectionCode}, #{deviceId}, #{deviceCode}, #{deviceName},
+            #{operatorId}, #{operatorName}, #{startTime}, #{areaId}, #{teamId}, #{createTime}, #{status}
+        )
+    </insert>
+
+    <!-- 获取所有未开始且开始时间已到的检测任务 -->
+    <select id="getDetectionTasksByStartTime" resultType="com.device.entity.detection.DetectionTask">
+        SELECT * FROM detection_task 
+        WHERE status = 0 AND start_time &lt;= #{now}
+    </select>
+
+    <!-- 更新检测任务状态 -->
+    <update id="updateDetectionTaskStatus">
+        UPDATE detection_task 
+        SET status = #{status}, update_time = NOW() 
+        WHERE task_id = #{taskId}
+    </update>
+
+    <!-- 更新检测任务的检测ID -->
+    <update id="updateDetectionTaskDetectionId">
+        UPDATE detection_task 
+        SET detection_id = #{detectionId}, update_time = NOW() 
+        WHERE task_id = #{taskId}
+    </update>
+
+    
+    <!-- 创建检测审核记录 -->
+    <insert id="createDetectionVerify" useGeneratedKeys="true" keyProperty="verifyId">
+        INSERT INTO detection_verify (
+            detection_id, task_id, verify_step, area_id, team_id, create_time, update_time
+        ) VALUES (
+            #{detectionId}, #{taskId}, #{verifyStep}, #{areaId}, #{teamId}, #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <!-- 更新检测审核记录 -->
+<update id="updateDetectionVerify">
+    UPDATE detection_verify
+    <set>
+        <if test="verifyStep != null">verify_step = #{verifyStep},</if>
+        <if test="verifyResult != null">verify_result = #{verifyResult},</if>
+        <if test="verifyOpinion != null">verify_opinion = #{verifyOpinion},</if>
+        <if test="signature != null">signature = #{signature},</if>
+        <if test="satisfactionScore != null">satisfaction_score = #{satisfactionScore},</if>
+        <if test="operatorId != null">operator_id = #{operatorId},</if>
+        <if test="operatorName != null">operator_name = #{operatorName},</if>
+        <if test="verifyTime != null">verify_time = #{verifyTime},</if>
+        <if test="firstReviewerId != null">first_reviewer_id = #{firstReviewerId},</if>
+        <if test="firstReviewerName != null">first_reviewer_name = #{firstReviewerName},</if>
+        <if test="secondReviewerId != null">second_reviewer_id = #{secondReviewerId},</if>
+        <if test="secondReviewerName != null">second_reviewer_name = #{secondReviewerName},</if>
+        update_time = NOW()
+    </set>
+    WHERE verify_id = #{verifyId}
+</update>
+
+<!-- 删除检测审核记录 -->
+<delete id="deleteDetectionVerify">
+    DELETE FROM detection_verify WHERE verify_id = #{verifyId}
+</delete>
+
+<!-- 根据检测ID获取审核记录 -->
+<select id="getDetectionVerifyByDetectionId" resultType="com.device.entity.detection.DetectionVerify">
+    SELECT * FROM detection_verify WHERE detection_id = #{detectionId}
+</select>
+
+<!-- 根据审核ID获取审核记录 -->
+<select id="getDetectionVerifyById" resultType="com.device.entity.detection.DetectionVerify">
+    SELECT * FROM detection_verify WHERE verify_id = #{verifyId}
+</select>
+
+<!-- 更新检测任务状态 -->
+<update id="updateDetectionTaskStatusByDetectionId">
+    UPDATE detection_task SET status = #{status}, update_time = NOW()
+    WHERE detection_id = #{detectionId}
+</update>
+
+<!-- 更新检测记录状态 -->
+<update id="updateDetectionRecordStatus">
+    UPDATE detection_record SET status = #{status}, update_time = NOW()
+    WHERE detection_id = #{detectionId}
+</update>
+
+    <!-- 更新检测记录的关闭时间 -->
+    <update id="updateDetectionRecordCloseTime">
+        UPDATE detection_record
+        SET close_time = NOW(), update_time = NOW()
+        WHERE detection_id = #{detectionId}
+    </update>
+
+    <!-- 更新检测任务的关闭时间 -->
+    <update id="updateDetectionTaskCloseTime">
+        UPDATE detection_task
+        SET close_time = NOW(), update_time = NOW()
+        WHERE detection_id = #{detectionId}
+    </update>
+
+
+    <!-- 分页查询待审核的检测列表 -->
+    <select id="pageQueryPendingDetections" resultType="com.device.vo.detection.DetectionQueryVO">
+        SELECT dr.*,dv.verify_step
+        FROM detection_record dr
+        JOIN detection_verify dv ON dr.detection_id = dv.detection_id
+        <where>
+            <if test="areaId != null">
+                AND dr.area_id = #{areaId}
+            </if>
+            <if test="teamId != null">
+                AND dr.team_id = #{teamId}
+            </if>
+            <if test="deviceName != null and deviceName != ''">
+                AND dr.device_name like Concat('%',#{deviceName}, '%')
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND dr.create_time &gt;= #{startTime}
+            </if>
+            <if test="completeTime != null and completeTime != ''">
+                AND dr.create_time &lt;= #{completeTime}
+            </if>
+            <if test="verifyStep != null">
+                <choose>
+                    <when test="verifyStep == -1">
+                        <!-- 班组长-已完成：verifyStep != 1 -->
+                        AND dv.verify_step != 1
+                    </when>
+                    <when test="verifyStep == -2">
+                        <!-- 工区长-全部审核：verifyStep = 2 或 verifyStep = 3 -->
+                        AND (dv.verify_step = 2 OR dv.verify_step = 3)
+                    </when>
+                    <otherwise>
+                        AND dv.verify_step = #{verifyStep}
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+        ORDER BY dr.create_time DESC
+    </select>
+
+    <!-- 创建保养任务 -->
+    <insert id="createMaintenanceTask" useGeneratedKeys="true" keyProperty="taskId">
+        INSERT INTO maintenance_task (
+            maintenance_id, maintenance_code, device_id, device_code, device_name,
+            task_name, start_time, end_time, executor_id, executor_name,
+            status, area_id, team_id, create_time, update_time
+        ) VALUES (
+            #{maintenanceId}, #{maintenanceCode}, #{deviceId}, #{deviceCode}, #{deviceName},
+            #{taskName}, #{startTime}, #{endTime}, #{executorId}, #{executorName},
+            #{status}, #{areaId}, #{teamId}, #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <!-- 创建保养审核记录 -->
+    <insert id="createMaintenanceVerify" useGeneratedKeys="true" keyProperty="verifyId">
+        INSERT INTO maintenance_verify (
+            maintenance_id, task_id, verify_step, verify_result, verify_opinion, signature,
+            satisfaction_score, area_id, team_id, create_time, update_time
+        ) VALUES (
+            #{maintenanceId}, #{taskId}, #{verifyStep}, #{verifyResult}, #{verifyOpinion}, #{signatureUrl},
+            #{satisfactionScore}, #{areaId}, #{teamId}, #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <!-- 创建保养记录 -->
+    <insert id="createMaintenanceRecord" useGeneratedKeys="true" keyProperty="maintenanceId">
+        INSERT INTO maintenance_record (
+            maintenance_code, device_id, device_code, device_name,
+            operator_id, operator_name, start_time, area_id, team_id, create_time, status
+        ) VALUES (
+            #{maintenanceCode}, #{deviceId}, #{deviceCode}, #{deviceName},
+            #{operatorId}, #{operatorName}, #{startTime}, #{areaId}, #{teamId}, #{createTime}, #{status}
+        )
+    </insert>
+
+    <!-- 获取所有未开始且开始时间已到的保养任务 -->
+    <select id="getMaintenanceTasksByStartTime" resultType="com.device.entity.maintenance.MaintenanceTask">
+        SELECT * FROM maintenance_task 
+        WHERE status = 0 AND start_time &lt;= #{now}
+    </select>
+
+    <!-- 更新保养任务状态 -->
+    <update id="updateMaintenanceTaskStatus">
+        UPDATE maintenance_task 
+        SET status = #{status}, update_time = NOW() 
+        WHERE task_id = #{taskId}
+    </update>
+
+    <!-- 更新保养任务的保养ID -->
+    <update id="updateMaintenanceTaskMaintenanceId">
+        UPDATE maintenance_task 
+        SET maintenance_id = #{maintenanceId}, update_time = NOW() 
+        WHERE task_id = #{taskId}
+    </update>
+
+    <!-- 更新保养审核记录 -->
+    <update id="updateMaintenanceVerify">
+        UPDATE maintenance_verify
+        <set>
+            <if test="verifyStep != null">verify_step = #{verifyStep},</if>
+            <if test="verifyResult != null">verify_result = #{verifyResult},</if>
+            <if test="verifyOpinion != null">verify_opinion = #{verifyOpinion},</if>
+            <if test="signature != null">signature = #{signature},</if>
+            <if test="satisfactionScore != null">satisfaction_score = #{satisfactionScore},</if>
+            <if test="operatorId != null">operator_id = #{operatorId},</if>
+            <if test="operatorName != null">operator_name = #{operatorName},</if>
+            <if test="verifyTime != null">verify_time = #{verifyTime},</if>
+            <if test="firstReviewerId != null">first_reviewer_id = #{firstReviewerId},</if>
+            <if test="firstReviewerName != null">first_reviewer_name = #{firstReviewerName},</if>
+            <if test="secondReviewerId != null">second_reviewer_id = #{secondReviewerId},</if>
+            <if test="secondReviewerName != null">second_reviewer_name = #{secondReviewerName},</if>
+            update_time = NOW()
+        </set>
+        WHERE verify_id = #{verifyId}
+    </update>
+
+    <!-- 删除保养审核记录 -->
+    <delete id="deleteMaintenanceVerify">
+        DELETE FROM maintenance_verify WHERE verify_id = #{verifyId}
+    </delete>
+
+    <!-- 根据保养ID获取审核记录 -->
+    <select id="getMaintenanceVerifyByMaintenanceId" resultType="com.device.entity.maintenance.MaintenanceVerify">
+        SELECT * FROM maintenance_verify WHERE maintenance_id = #{maintenanceId}
+    </select>
+
+    <!-- 根据审核ID获取审核记录 -->
+    <select id="getMaintenanceVerifyById" resultType="com.device.entity.maintenance.MaintenanceVerify">
+        SELECT * FROM maintenance_verify WHERE verify_id = #{verifyId}
+    </select>
+
+    <!-- 更新保养任务状态 -->
+    <update id="updateMaintenanceTaskStatusByMaintenanceId">
+        UPDATE maintenance_task SET status = #{status}, update_time = NOW()
+        WHERE maintenance_id = #{maintenanceId}
+    </update>
+
+    <!-- 更新保养记录状态 -->
+    <update id="updateMaintenanceRecordStatus">
+        UPDATE maintenance_record SET status = #{status}, update_time = NOW()
+        WHERE maintenance_id = #{maintenanceId}
+    </update>
+
+    <!-- 更新保养记录关闭时间 -->
+    <update id="updateMaintenanceRecordCloseTime">
+        UPDATE maintenance_record
+        SET close_time = NOW(), update_time = NOW()
+        WHERE maintenance_id = #{maintenanceId}
+    </update>
+
+    <!-- 更新保养任务关闭时间 -->
+    <update id="updateMaintenanceTaskCloseTime">
+        UPDATE maintenance_task
+        SET close_time = NOW(), update_time = NOW()
+        WHERE maintenance_id = #{maintenanceId}
+    </update>
+
+
+    <!-- 分页查询待审核的保养列表 -->
+    <select id="pageQueryPendingMaintenances" resultType="com.device.vo.maintenance.MaintenanceQueryVO">
+        SELECT mr.*,mv.verify_step
+        FROM maintenance_record mr
+        JOIN maintenance_verify mv ON mr.maintenance_id = mv.maintenance_id
+        <where>
+            <if test="areaId != null">
+                AND mr.area_id = #{areaId}
+            </if>
+            <if test="teamId != null">
+                AND mr.team_id = #{teamId}
+            </if>
+            <if test="deviceName != null and deviceName != ''">
+                AND mr.device_name like Concat('%',#{deviceName}, '%')
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND mr.creat_time &gt;= #{startTime}
+            </if>
+            <if test="completeTime != null and completeTime != ''">
+                AND mr.creat_time &lt;= #{completeTime}
+            </if>
+            <if test="verifyStep != null">
+                <choose>
+                    <when test="verifyStep == -1">
+                        <!-- 班组长-已完成：verifyStep != 1 -->
+                        AND mv.verify_step != 1
+                    </when>
+                    <when test="verifyStep == -2">
+                        <!-- 工区长-全部审核：verifyStep = 2 或 verifyStep = 3 -->
+                        AND (mv.verify_step = 2 OR mv.verify_step = 3)
+                    </when>
+                    <otherwise>
+                        AND mv.verify_step = #{verifyStep}
+                    </otherwise>
+                </choose>
+            </if>
+            and mr.status &gt; 1
+        </where>
+        ORDER BY mr.create_time DESC
+    </select>
+    <select id="getMaintenanceCodeByMaintenanceId" resultType="java.lang.String">
+        SELECT maintenance_code FROM maintenance_record WHERE maintenance_id in
+            <foreach item="item" collection="maintenanceIds" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+
+    </select>
+    <select id="getMaintenanceIdByTime" resultType="java.lang.Long">
+        select maintenance_id from maintenance_verify
+        <where>
+            <if test="verifyStep != null">
+                and verify_step = #{verifyStep}
+            </if>
+            <choose>
+                <when test="verifyStep == 1">
+                   and create_time &lt;= #{listenTime}
+                </when>
+                <otherwise>
+                    and verify_time &lt;= #{listenTime}
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+
+    <!-- 根据ID获取巡检记录 -->
+    <select id="getInspectionRecordById" resultType="com.device.entity.inspection.InspectionRecord">
+        SELECT * FROM inspection_record WHERE inspection_id = #{inspectionId}
+    </select>
+
+    <!-- 根据ID获取检测记录 -->
+    <select id="getDetectionRecordById" resultType="com.device.entity.detection.DetectionRecord">
+        SELECT * FROM detection_record WHERE detection_id = #{detectionId}
+    </select>
+
+    <!-- 根据ID获取保养记录 -->
+    <select id="getMaintenanceRecordById" resultType="com.device.entity.maintenance.MaintenanceRecord">
+        SELECT * FROM maintenance_record WHERE maintenance_id = #{maintenanceId}
+    </select>
+
+
+
+</mapper>

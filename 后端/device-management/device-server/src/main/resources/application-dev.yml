@@ -1,0 +1,37 @@
+device:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: localhost
+    port: 3306
+    database: device_management
+    username: root
+    password: 123456
+  alioss:
+    endpoint: 请填入自己的信息
+    #access-key-id: 请填入自己的信息
+    #access-key-secret: 请填入自己的信息
+    #bucket-name: 请填入自己的信息
+    # TODO redis
+  redis:
+    host: localhost
+    port: 6379
+    password: 339229Cwk
+    database: 10
+#无法使用 仅展示
+  wechat:
+    appid: 请填入自己的信息
+    secret: 请填入自己的信息
+    mchid: 请填入自己的信息
+    mchSerialNo: 请填入自己的信息
+    privateKeyFilePath: 请填入自己的信息
+    apiV3Key: 请填入自己的信息
+    wechatPayCertFilePath: 请填入自己的信息
+    notifyUrl: 请填入自己的信息
+    refundNotifyUrl: 请填入自己的信息
+  baidu:
+    appId: 请填入自己的信息
+    key: 请填入自己的信息
+    secret: 请填入自己的信息
+    groupId: 请填入自己的信息
+
+
